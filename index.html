@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="人生資產負債表：把未來收入也算進資產，用最差情境壓力測試你的財務結構。" />
+    <title>人生資產負債表</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖</text></svg>" />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div>
+          <h1>人生資產負債表</h1>
+          <p class="subtitle">未來收入也是資產；長期看好，但資金結構不能讓自己活不到長期。</p>
+        </div>
+        <p class="privacy" title="本頁不會把任何資料傳到網路">🔒 資料只存在你的瀏覽器</p>
+      </div>
+    </header>
+
+    <main class="container layout">
+      <section class="panel form-panel" aria-labelledby="form-title">
+        <div class="panel-head">
+          <h2 id="form-title">填寫資料</h2>
+          <div class="toolbar">
+            <label class="select-wrap">
+              <span class="sr-only">載入範例</span>
+              <select id="example-select">
+                <option value="">載入範例…</option>
+              </select>
+            </label>
+            <button type="button" id="btn-export" class="btn ghost">匯出</button>
+            <label class="btn ghost file-btn">
+              匯入<input type="file" id="file-import" accept="application/json" hidden />
+            </label>
+            <button type="button" id="btn-reset" class="btn ghost danger">清除</button>
+          </div>
+        </div>
+
+        <form id="balance-form" autocomplete="off" novalidate>
+          <fieldset>
+            <legend>收入與支出（每月，元）</legend>
+            <div class="grid-2">
+              <label class="field">
+                <span>每月稅後收入</span>
+                <input type="number" min="0" step="1000" data-path="profile.monthlyIncome" />
+                <small class="hint"></small>
+              </label>
+              <label class="field">
+                <span>每月生活支出（不含還款）</span>
+                <input type="number" min="0" step="1000" data-path="profile.monthlyExpense" />
+                <small class="hint"></small>
+              </label>
+              <label class="field">
+                <span>收入穩定度</span>
+                <select data-path="profile.incomeStability" id="stability-select"></select>
+              </label>
+              <label class="field">
+                <span>距離退休（年）</span>
+                <input type="number" min="0" max="60" step="1" data-path="profile.yearsToRetire" />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>資產（目前市值，元）</legend>
+            <div class="grid-2" id="asset-fields"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>負債</legend>
+            <p class="fieldset-note">
+              質押、融資請填「擔保股票市值」，才能算出跌多少會被追繳（以 130% 維持率估算）。
+            </p>
+            <div id="debt-list" class="debt-list"></div>
+            <button type="button" id="btn-add-debt" class="btn outline">＋ 新增一筆負債</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>目標與心理測試</legend>
+            <div class="grid-2">
+              <label class="field">
+                <span>人生財務目標（元）</span>
+                <input type="number" min="0" step="100000" data-path="profile.targetNetWorth" />
+                <small class="hint"></small>
+              </label>
+              <label class="field">
+                <span>其中確定 5 年以上用不到的現金</span>
+                <input type="number" min="0" step="10000" data-path="profile.longTermCash" />
+                <small class="hint"></small>
+              </label>
+            </div>
+            <label class="check">
+              <input type="checkbox" data-path="profile.wouldPanicSell" />
+              <span>如果帳面跌四成，我可能會受不了而賣掉（心裡斷頭）</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" data-path="profile.hasAddRules" />
+              <span>我已事先寫好大跌時的加碼／換股規則</span>
+            </label>
+          </fieldset>
+        </form>
+      </section>
+
+      <section class="results" aria-live="polite">
+        <div class="panel score-panel">
+          <div class="score-ring" id="score-ring">
+            <span id="score-value">—</span>
+          </div>
+          <div>
+            <p class="eyebrow">財務結構健康度</p>
+            <p class="score-grade" id="score-grade">請先填寫資料</p>
+            <p class="muted" id="score-summary"></p>
+          </div>
+        </div>
+
+        <div class="metrics" id="metrics"></div>
+
+        <div class="panel">
+          <h2>資產負債表</h2>
+          <div class="sheet" id="sheet"></div>
+          <div class="bars" id="bars"></div>
+        </div>
+
+        <div class="panel">
+          <h2>壓力測試四問</h2>
+          <p class="muted">不要在多頭時問自己敢不敢，用最差情況回測。</p>
+          <ol class="stress-list" id="stress-questions"></ol>
+          <div class="table-wrap">
+            <table class="data-table" id="stress-table"></table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>分析與建議</h2>
+          <ul class="advice-list" id="advice-list"></ul>
+        </div>
+
+        <div class="panel">
+          <h2>借錢投資試算：問「借多少」，不是「借不借」</h2>
+          <p class="muted">
+            模型：未來每月可拿出固定金額。A 每月定期定額；B 今天借信貸一次買完，之後每月還本息。
+          </p>
+          <form id="lev-form" class="grid-3" autocomplete="off">
+            <label class="field">
+              <span>每月可拿出（元）</span>
+              <input type="number" min="0" step="1000" name="monthlyAmount" value="100000" />
+            </label>
+            <label class="field">
+              <span>借款年利率（%）</span>
+              <input type="number" min="0" step="0.1" name="annualRate" value="4" />
+            </label>
+            <label class="field">
+              <span>還款期數（月）</span>
+              <input type="number" min="1" step="1" name="months" value="12" />
+            </label>
+            <label class="field">
+              <span>預期年報酬（%）</span>
+              <input type="number" step="0.5" name="expectedReturn" value="8" />
+            </label>
+            <label class="field">
+              <span>持有年數</span>
+              <input type="number" min="1" step="1" name="holdYears" value="10" />
+            </label>
+            <label class="field">
+              <span>最差情境跌幅（%）</span>
+              <input type="number" min="0" max="100" step="5" name="worstDrop" value="50" />
+            </label>
+          </form>
+          <div id="lev-summary" class="lev-summary"></div>
+          <div class="table-wrap">
+            <table class="data-table" id="lev-table"></table>
+          </div>
+          <p class="callout">
+            借 4%、股票平均賺 8%，不是穩賺 4%，而是用確定的成本換不確定的報酬。優先選固定本息的借款，不能只比利率。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          內容依據 Podcast《就是愛玩股》EP435〈台股五萬點了，借錢買股會不會太危險？〉整理，建議旁的時間戳對應節目段落。
+        </p>
+        <p>本工具僅供自我檢視與教育用途，不構成投資建議。計算結果為簡化估算。</p>
+      </div>
+    </footer>
+
+    <template id="debt-template">
+      <div class="debt-row">
+        <label class="field">
+          <span>種類</span>
+          <select data-debt="type"></select>
+        </label>
+        <label class="field">
+          <span>名稱</span>
+          <input type="text" data-debt="name" placeholder="例：自住房貸" />
+        </label>
+        <label class="field">
+          <span>剩餘本金（元）</span>
+          <input type="number" min="0" step="10000" data-debt="balance" />
+        </label>
+        <label class="field">
+          <span>年利率（%）</span>
+          <input type="number" min="0" step="0.1" data-debt="rate" />
+        </label>
+        <label class="field">
+          <span>每月還款（元）</span>
+          <input type="number" min="0" step="1000" data-debt="monthlyPayment" />
+        </label>
+        <label class="field collateral">
+          <span>擔保股票市值（元）</span>
+          <input type="number" min="0" step="10000" data-debt="collateralValue" />
+        </label>
+        <button type="button" class="btn icon remove" aria-label="刪除這筆負債">✕</button>
+      </div>
+    </template>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
