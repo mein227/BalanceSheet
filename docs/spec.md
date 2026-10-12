@@ -67,6 +67,7 @@
 ## 4. 非功能需求
 
 - 純靜態網站，不需建置，可直接部署到 GitHub Pages。
+- 金額單位：介面上所有金額輸入與顯示一律為「萬元」（例：`117 萬元`、`0.3 萬元`）。內部計算、`localStorage` 與匯出 JSON 以「元」儲存，換算只發生在 `src/app.js`（透過 `src/format.js` 的 `wanToYuan`／`yuanToWan`）。
 - 不使用任何外部資源（CDN、字型、追蹤碼）；使用者資料只存在瀏覽器 `localStorage`，可匯出／匯入 JSON。
 - 支援手機版面與深色模式。
 

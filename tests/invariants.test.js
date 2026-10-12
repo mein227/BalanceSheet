@@ -30,6 +30,16 @@ test('index.html 只載入本地資源（不使用 CDN、追蹤碼）', () => {
   }
 });
 
+test('金額欄位一律以「萬元」輸入，且都標記 data-money', () => {
+  const html = read('index.html') + read('src/app.js');
+  assert.doesNotMatch(html, /（元）/, '介面不得出現以「元」為單位的欄位');
+  const moneyKeys = ['monthlyIncome', 'monthlyExpense', 'targetNetWorth', 'longTermCash', 'balance', 'monthlyPayment', 'collateralValue', 'assets.'];
+  const inputs = [...html.matchAll(/<input[^>]*data-(?:path|debt)="([^"]+)"[^>]*>/g)];
+  for (const [tag, key] of inputs) {
+    if (moneyKeys.some((k) => key.includes(k))) assert.match(tag, /data-money/, `${key} 缺少 data-money`);
+  }
+});
+
 test('index.html 引用的本地檔案都存在', () => {
   const html = read('index.html');
   const refs = [...html.matchAll(/(?:src|href)="(src\/[^"]+)"/g)].map((m) => m[1]);

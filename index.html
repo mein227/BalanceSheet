@@ -40,16 +40,16 @@
 
         <form id="balance-form" autocomplete="off" novalidate>
           <fieldset>
-            <legend>收入與支出（每月，元）</legend>
+            <legend>收入與支出（每月，萬元）</legend>
             <div class="grid-2">
               <label class="field">
                 <span>每月稅後收入</span>
-                <input type="number" min="0" step="1000" data-path="profile.monthlyIncome" />
+                <input type="number" min="0" step="any" inputmode="decimal" data-money data-path="profile.monthlyIncome" />
                 <small class="hint"></small>
               </label>
               <label class="field">
                 <span>每月生活支出（不含還款）</span>
-                <input type="number" min="0" step="1000" data-path="profile.monthlyExpense" />
+                <input type="number" min="0" step="any" inputmode="decimal" data-money data-path="profile.monthlyExpense" />
                 <small class="hint"></small>
               </label>
               <label class="field">
@@ -64,7 +64,7 @@
           </fieldset>
 
           <fieldset>
-            <legend>資產（目前市值，元）</legend>
+            <legend>資產（目前市值，萬元）</legend>
             <div class="grid-2" id="asset-fields"></div>
           </fieldset>
 
@@ -81,13 +81,13 @@
             <legend>目標與心理測試</legend>
             <div class="grid-2">
               <label class="field">
-                <span>人生財務目標（元）</span>
-                <input type="number" min="0" step="100000" data-path="profile.targetNetWorth" />
+                <span>人生財務目標（萬元）</span>
+                <input type="number" min="0" step="any" inputmode="decimal" data-money data-path="profile.targetNetWorth" />
                 <small class="hint"></small>
               </label>
               <label class="field">
-                <span>其中確定 5 年以上用不到的現金</span>
-                <input type="number" min="0" step="10000" data-path="profile.longTermCash" />
+                <span>其中確定 5 年以上用不到的現金（萬元）</span>
+                <input type="number" min="0" step="any" inputmode="decimal" data-money data-path="profile.longTermCash" />
                 <small class="hint"></small>
               </label>
             </div>
@@ -144,8 +144,8 @@
           </p>
           <form id="lev-form" class="grid-3" autocomplete="off">
             <label class="field">
-              <span>每月可拿出（元）</span>
-              <input type="number" min="0" step="1000" name="monthlyAmount" value="100000" />
+              <span>每月可拿出（萬元）</span>
+              <input type="number" min="0" step="any" inputmode="decimal" name="monthlyAmount" value="10" />
             </label>
             <label class="field">
               <span>借款年利率（%）</span>
@@ -199,20 +199,20 @@
           <input type="text" data-debt="name" placeholder="例：自住房貸" />
         </label>
         <label class="field">
-          <span>剩餘本金（元）</span>
-          <input type="number" min="0" step="10000" data-debt="balance" />
+          <span>剩餘本金（萬元）</span>
+          <input type="number" min="0" step="any" inputmode="decimal" data-money data-debt="balance" />
         </label>
         <label class="field">
           <span>年利率（%）</span>
           <input type="number" min="0" step="0.1" data-debt="rate" />
         </label>
         <label class="field">
-          <span>每月還款（元）</span>
-          <input type="number" min="0" step="1000" data-debt="monthlyPayment" />
+          <span>每月還款（萬元）</span>
+          <input type="number" min="0" step="any" inputmode="decimal" data-money data-debt="monthlyPayment" />
         </label>
         <label class="field collateral">
-          <span>擔保股票市值（元）</span>
-          <input type="number" min="0" step="10000" data-debt="collateralValue" />
+          <span>擔保股票市值（萬元）</span>
+          <input type="number" min="0" step="any" inputmode="decimal" data-money data-debt="collateralValue" />
         </label>
         <button type="button" class="btn icon remove" aria-label="刪除這筆負債">✕</button>
       </div>

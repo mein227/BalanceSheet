@@ -9,7 +9,7 @@ import {
 } from './calc.js';
 import { SEVERITY, generateAdvice, healthScore } from './advice.js';
 import { EMPTY_DATA, EXAMPLES } from './examples.js';
-import { formatMoney, formatMonths, formatPct } from './format.js';
+import { formatMoney, formatMonths, formatPct, wanToYuan, yuanToWan } from './format.js';
 
 const STORAGE_KEY = 'life-balance-sheet:v1';
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -51,9 +51,12 @@ function setPath(obj, path, value) {
 function setHint(input) {
   const hint = input.closest('.field')?.querySelector('.hint');
   if (!hint) return;
-  const v = Number(input.value);
-  hint.textContent = v >= 10000 ? `≈ ${formatMoney(v)}` : '';
+  const yuan = wanToYuan(input.value);
+  hint.textContent = yuan > 0 ? `＝ ${yuan.toLocaleString('zh-TW')} 元` : '';
 }
+
+const readInput = (el) => (el.hasAttribute('data-money') ? wanToYuan(el.value) : Number(el.value));
+const showMoney = (yuan) => (yuan ? yuanToWan(yuan) : '');
 
 /* ---------- 表單建立 ---------- */
 
@@ -68,7 +71,7 @@ function buildStaticForm() {
     const label = document.createElement('label');
     label.className = 'field';
     label.innerHTML = `<span>${meta.label}</span>
-      <input type="number" min="0" step="10000" data-path="assets.${key}" />
+      <input type="number" min="0" step="any" inputmode="decimal" data-money data-path="assets.${key}" />
       <small class="hint"></small>`;
     assetWrap.append(label);
   }
@@ -82,6 +85,7 @@ function fillForm() {
     const value = getPath(state, input.dataset.path);
     if (input.type === 'checkbox') input.checked = Boolean(value);
     else if (input.tagName === 'SELECT') input.value = value;
+    else if (input.hasAttribute('data-money')) input.value = showMoney(value);
     else input.value = value || '';
     setHint(input);
   }
@@ -99,7 +103,9 @@ function renderDebts() {
     for (const [key, meta] of Object.entries(DEBT_TYPES)) typeSelect.add(new Option(meta.label, key));
     for (const input of row.querySelectorAll('[data-debt]')) {
       const v = debt[input.dataset.debt];
-      input.value = input.dataset.debt === 'type' || input.dataset.debt === 'name' ? v : v || '';
+      if (input.dataset.debt === 'type' || input.dataset.debt === 'name') input.value = v;
+      else if (input.hasAttribute('data-money')) input.value = showMoney(v);
+      else input.value = v || '';
     }
     row.classList.toggle('is-market', DEBT_TYPES[debt.type].kind === 'market');
     list.append(row);
@@ -116,13 +122,13 @@ function bindEvents() {
   form.addEventListener('input', (e) => {
     const el = e.target;
     if (el.dataset.path) {
-      const value = el.type === 'checkbox' ? el.checked : el.tagName === 'SELECT' ? el.value : Number(el.value);
+      const value = el.type === 'checkbox' ? el.checked : el.tagName === 'SELECT' ? el.value : readInput(el);
       setPath(state, el.dataset.path, value);
       setHint(el);
     } else if (el.dataset.debt) {
       const index = Number(el.closest('.debt-row').dataset.index);
       const key = el.dataset.debt;
-      state.liabilities[index][key] = key === 'type' || key === 'name' ? el.value : Number(el.value);
+      state.liabilities[index][key] = key === 'type' || key === 'name' ? el.value : readInput(el);
       if (key === 'type') {
         el.closest('.debt-row').classList.toggle('is-market', DEBT_TYPES[el.value].kind === 'market');
       }
@@ -397,7 +403,7 @@ function renderLeverage(m) {
   const f = new FormData($('#lev-form'));
   const v = (k) => Number(f.get(k));
   const sim = leverageSimulation({
-    monthlyAmount: v('monthlyAmount'),
+    monthlyAmount: wanToYuan(f.get('monthlyAmount')),
     annualRate: v('annualRate') / 100,
     months: v('months'),
     expectedReturn: v('expectedReturn') / 100,
@@ -409,7 +415,7 @@ function renderLeverage(m) {
 
   $('#lev-summary').innerHTML = `
     <div><p class="metric-label">今天最多能借（年金現值）</p><p class="metric-value">${formatMoney(sim.borrowable)}</p>
-      <p class="metric-note">總利息 ${formatMoney(sim.totalInterest)}；不能借滿 ${formatMoney(v('monthlyAmount') * v('months'))} 再另付利息</p></div>
+      <p class="metric-note">總利息 ${formatMoney(sim.totalInterest)}；不能借滿 ${formatMoney(wanToYuan(f.get('monthlyAmount')) * v('months'))} 再另付利息</p></div>
     <div><p class="metric-label">借滿一次買 vs 定期定額（期望值）</p><p class="metric-value">${formatMoney(sim.fullExtra)}</p>
       <p class="metric-note">${v('holdYears')} 年後的期望差距</p></div>
     <div><p class="metric-label">最差情境立刻下跌 ${v('worstDrop')}%</p><p class="metric-value neg">${formatMoney(-sim.fullWorstLoss)}</p>
