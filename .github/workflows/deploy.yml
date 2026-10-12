@@ -40,6 +40,11 @@ jobs:
           mkdir _site
           cp index.html _site/
           cp -r src _site/
+          # GitHub Pages 快取 10 分鐘；加上版本參數，避免新 HTML 搭配舊 JS（單位換算會錯）
+          VERSION="${GITHUB_SHA::8}"
+          sed -i -E "s#\"(src/[a-z]+\.(js|css))\"#\"\1?v=${VERSION}\"#g" _site/index.html
+          sed -i -E "s#from '(\./[a-z]+\.js)'#from '\1?v=${VERSION}'#g" _site/src/*.js
+          grep -c "?v=${VERSION}" _site/index.html _site/src/app.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
