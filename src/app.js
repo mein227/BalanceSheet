@@ -425,11 +425,11 @@ function renderLeverage(m) {
     return notes.join('；') || '—';
   };
   $('#lev-table').innerHTML = `
-    <thead><tr><th>方案</th><th>借款金額</th><th>期望多賺</th><th>占人生目標</th><th>最差情境虧損</th><th>占目前淨值</th><th>提醒</th></tr></thead>
+    <thead><tr><th>方案</th><th>借款金額</th><th>期望多賺</th><th>占人生目標</th><th>最差情境虧損</th><th>占目前淨值</th><th class="note">提醒</th></tr></thead>
     <tbody>${sim.rows
       .map(
         (r) => `<tr><th scope="row">${ratioLabel[r.ratio]}</th><td>${formatMoney(r.borrowed)}</td>
-          <td>${formatMoney(r.extraGain)}</td><td>${formatPct(r.shareOfTarget, 1)}</td>
+          <td>${formatMoney(r.extraGain)}</td><td>${formatPct(r.shareOfTarget, 2)}</td>
           <td class="neg">${formatMoney(-r.worstLoss)}</td><td>${formatPct(r.worstLossShareOfNetWorth, 1)}</td>
           <td class="note">${note(r)}</td></tr>`,
       )

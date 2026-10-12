@@ -734,7 +734,7 @@ select:focus,
   white-space: normal;
 }
 
-.data-table td.note {
+.data-table .note {
   text-align: left;
   white-space: normal;
   color: var(--muted);
